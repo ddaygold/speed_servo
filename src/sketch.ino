@@ -1,4 +1,5 @@
 #include "globals.h"
+#include <PID_v1.h>
 
 void setup(){
   pinMode(PINA, INPUT);
@@ -10,11 +11,17 @@ void setup(){
   Wire.begin(0b0001000+(digitalRead(ADDRESS_PIN) == HIGH)?1:0);
   Wire.onReceive(receive);
   Wire.onRequest(writeVoltage);
+  Serial.begin(9600);
 }
 
 void loop(){
   delay(100);
   processPID();
+  char output_buffer[100];
+  snprintf(output_buffer, 100,
+	   "Recv vals [p,i,d x1000]: {speed: %d, p: %d, i: %d, d: %d}",
+	   speed, pterm*1000, iterm*1000, dterm*1000);
+  Serial.println(output_buffer);
 }
 
 void processPID(){
@@ -52,11 +59,20 @@ void writeVoltage(){
   Wire.write(analogRead(VOLTAGE_PIN));
 }
 void setParam(int incoming, volatile int * dest){
-  if(incoming != 3){
+  if(incoming != sizeof(int) +1){
     return;
   }
-  int intermediate = Wire.read() + (Wire.read() << 8);
-  *dest = intermediate;
+  *dest = Wire.read() + (Wire.read() << 8);
+}
+void setParam(int incoming, volatile double * dest){
+  if(incoming != sizeof(double)+1){
+    return;
+  }
+  byte buff[4];
+  for(int i = 0; i < sizeof(double); ++i){
+    buff[i] = Wire.read();
+  }
+  *dest = *((double *)buff);
 }
 
 void spin(){
