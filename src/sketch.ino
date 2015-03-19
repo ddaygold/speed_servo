@@ -2,16 +2,19 @@
 #include <PID_v1.h>
 
 void setup(){
+  Serial.begin(9600);
   pinMode(PINA, INPUT);
   pinMode(PINB, INPUT);
   pinMode(ADDRESS_PIN, INPUT);
   pinMode(VICTOR_PIN, OUTPUT);
   victor.writeMicroseconds(1510);
   attachInterrupt(0,spin,CHANGE);
-  Wire.begin(0b0001000+(digitalRead(ADDRESS_PIN) == HIGH)?1:0);
+  int address = (digitalRead(ADDRESS_PIN) == HIGH)?2:1;
+  Serial.print("Address: ");
+  Serial.println(address);
+  Wire.begin(address);
   Wire.onReceive(receive);
   Wire.onRequest(writeVoltage);
-  Serial.begin(9600);
 }
 
 void loop(){
