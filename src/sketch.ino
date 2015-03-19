@@ -1,5 +1,4 @@
 #include "globals.h"
-#include <PID_v1.h>
 
 void setup(){
   Serial.begin(9600);
@@ -15,31 +14,38 @@ void setup(){
   Wire.begin(address);
   Wire.onReceive(receive);
   Wire.onRequest(writeVoltage);
+  controller.SetMode(AUTOMATIC);
+  controller.SetOutputLimits(-635,635);
 }
 
 void loop(){
-  delay(100);
-  processPID();
-  char output_buffer[100];
-  snprintf(output_buffer, 100,
-	   "Recv vals [p,i,d x1000]: {speed: %d, p: %d, i: %d, d: %d}",
-	   speed, pterm*1000, iterm*1000, dterm*1000);
-  Serial.println(output_buffer);
-}
-
-void processPID(){
   /*
     If the extremes are 870 microsecond and 2140 microseconds, with
     a center at 1510 microseconds, we have a width of 635 microseconds
   */
-  int difference = speed - ticks;
-  int new_out = difference*pterm;
-  constrain(new_out, -635, 635);
-  new_out += 1510;
-  victor.writeMicroseconds(new_out);
-  current_speed = new_out;
-  ticks = 0; 
+  if(millis() - last_tuning_update > 1000){
+    controller.SetTunings(pterm,iterm,dterm);
+    Serial.print("Speed: ");
+    Serial.print(speed);
+    Serial.print(" ticks: ");
+    Serial.print(ticks);
+    Serial.print(" p: ");
+    Serial.print(pterm);
+    Serial.print(" i: ");
+    Serial.print(iterm);
+    Serial.print(" d: ");
+    Serial.print(dterm);
+    Serial.print(" OUTPUT: ");
+    Serial.println(controller_output);
+    last_tuning_update = millis();
+  }
+  if(controller.Compute()){
+    victor.writeMicroseconds((int)controller_output + 1510);
+    ticks = 0;
+  }
+  delay(10);
 }
+
 
 void receive(int incoming){
   switch(Wire.read()){
