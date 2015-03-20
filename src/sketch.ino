@@ -6,8 +6,9 @@ void setup(){
   pinMode(PINB, INPUT);
   pinMode(ADDRESS_PIN, INPUT);
   pinMode(VICTOR_PIN, OUTPUT);
+  victor.attach(VICTOR_PIN);
   victor.writeMicroseconds(1510);
-  attachInterrupt(0,spin,CHANGE);
+  attachInterrupt(0,spin,RISING);
   int address = (digitalRead(ADDRESS_PIN) == HIGH)?2:1;
   Serial.print("Address: ");
   Serial.println(address);
@@ -25,6 +26,15 @@ void loop(){
   */
   if(millis() - last_tuning_update > 1000){
     controller.SetTunings(pterm,iterm,dterm);
+    last_tuning_update = millis();
+  }
+  if(controller.Compute() || controller.GetMode() == MANUAL){
+    if(controller.GetMode() != MANUAL){
+      int output = (int)controller_output + 1510;
+      victor.writeMicroseconds(output);
+    } else {
+      victor.writeMicroseconds(1510);
+    }
     Serial.print("Speed: ");
     Serial.print(speed);
     Serial.print(" ticks: ");
@@ -37,10 +47,9 @@ void loop(){
     Serial.print(dterm);
     Serial.print(" OUTPUT: ");
     Serial.println(controller_output);
-    last_tuning_update = millis();
-  }
-  if(controller.Compute()){
-    victor.writeMicroseconds((int)controller_output + 1510);
+    if(controller.GetMode() == MANUAL){
+      Serial.println("****ESTOP****");
+    }
     ticks = 0;
   }
   delay(10);
@@ -50,6 +59,9 @@ void loop(){
 void receive(int incoming){
   switch(Wire.read()){
   case SPEED:
+    if(controller.GetMode() == MANUAL){
+      controller.SetMode(AUTOMATIC);
+    }
     return setParam(incoming, &speed);
     break;
   case PTERM:
@@ -61,6 +73,11 @@ void receive(int incoming){
   case DTERM:
     return setParam(incoming, &dterm);
     break;
+  case ESTOP:
+    controller.SetMode(MANUAL);
+    speed = 0;
+    controller_output = 0;
+    victor.writeMicroseconds(0);
   }
 }
 

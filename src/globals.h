@@ -14,6 +14,7 @@ volatile double dterm = 0.0;
 #define DTERM 3
 #define VOLTAGE_PIN A0
 #define VOLTAGE 4
+#define ESTOP 5
 
 #define VICTOR_PIN 5
 Servo victor;
