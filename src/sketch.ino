@@ -1,6 +1,12 @@
 #include "globals.h"
 
 void setup(){
+  pterm = load_controller_tuning(PTERM);
+  iterm = load_controller_tuning(ITERM);
+  dterm = load_controller_tuning(DTERM);
+  //We need to update the controler after
+  //loading from EEPROM
+  controller.SetTunings(pterm,iterm,dterm);
   Serial.begin(9600);
   pinMode(PINA, INPUT);
   pinMode(PINB, INPUT);
@@ -65,13 +71,16 @@ void receive(int incoming){
     return setParam(incoming, &speed);
     break;
   case PTERM:
-    return setParam(incoming, &pterm);
+    setParam(incoming, &pterm);
+    save_controller_tuning(PTERM,pterm);
     break;
   case ITERM:
-    return setParam(incoming, &iterm);
+    setParam(incoming, &iterm);
+    save_controller_tuning(ITERM,iterm);
     break;
   case DTERM:
-    return setParam(incoming, &dterm);
+    setParam(incoming, &dterm);
+    save_controller_tuning(DTERM,dterm);
     break;
   case ESTOP:
     controller.SetMode(MANUAL);
@@ -106,5 +115,21 @@ void spin(){
     ticks++;
   } else {
     ticks--;
+  }
+}
+double load_controller_tuning(int tuning){
+  double out;
+  byte * reassembled = (byte *)&out;
+  for(int i = 0; i < sizeof(double); ++i){
+    *reassembled = EEPROM.read(sizeof(double)*tuning + i);
+    reassembled++;
+  }
+  return out;
+}
+void save_controller_tuning(int tuning, double value){
+  byte * disassembled = (byte *)&value;
+  for(int i = 0; i < sizeof(double); ++i){
+    EEPROM.write(sizeof(double)*tuning + i, *disassembled);
+    disassembled++;
   }
 }

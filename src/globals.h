@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <Servo.h>
 #include <PID_v1.h>
+#include <EEPROM.h>
 #define PINA 2
 #define PINB 3
 #define ADDRESS_PIN 13
