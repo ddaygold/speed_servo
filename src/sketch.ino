@@ -58,7 +58,6 @@ void loop(){
     }
     ticks = 0;
   }
-  delay(10);
 }
 
 
@@ -86,7 +85,6 @@ void receive(int incoming){
     controller.SetMode(MANUAL);
     speed = 0;
     controller_output = 0;
-    victor.writeMicroseconds(0);
   }
 }
 
