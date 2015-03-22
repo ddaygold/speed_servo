@@ -11,6 +11,8 @@ void setup(){
   pinMode(PINA, INPUT);
   pinMode(PINB, INPUT);
   pinMode(ADDRESS_PIN, INPUT);
+  pinMode(12,OUTPUT);
+  digitalWrite(12,HIGH); //so we can jumper over to pin 12
   pinMode(VICTOR_PIN, OUTPUT);
   victor.attach(VICTOR_PIN);
   victor.writeMicroseconds(1510);
