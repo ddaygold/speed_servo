@@ -25,7 +25,7 @@ void setup(){
   Wire.onRequest(writeVoltage);
   controller.SetMode(AUTOMATIC);
   controller.SetOutputLimits(-635,635);
-  controller.SetSampleTime(10);
+  controller.SetSampleTime(100);
 }
 
 void loop(){
@@ -71,7 +71,6 @@ void receive(int incoming){
       controller.SetMode(AUTOMATIC);
     }
     setParam(incoming, &speed);
-    speed /= 10;
     break;
   case PTERM:
     setParam(incoming, &pterm);
