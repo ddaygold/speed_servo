@@ -21,6 +21,7 @@ volatile double dterm = 0.0;
 Servo victor;
 
 volatile double ticks = 0;
+int last_ticks = 0;
 int current_speed = 1510;
 
 double controller_output = 0;
@@ -31,7 +32,7 @@ long last_tuning_update = 0;
 
 void processPID();
 void receive(int incoming);
-void writeVoltage();
+void writeTicks();
 void setParam(int incoming, volatile double * dest);
 void setParam(int incoming, volatile int * dest);
 void spin();

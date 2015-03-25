@@ -22,7 +22,7 @@ void setup(){
   Serial.println(address);
   Wire.begin(address);
   Wire.onReceive(receive);
-  Wire.onRequest(writeVoltage);
+  Wire.onRequest(writeTicks);
   controller.SetMode(AUTOMATIC);
   controller.SetOutputLimits(-635,635);
   controller.SetSampleTime(100);
@@ -59,6 +59,7 @@ void loop(){
     if(controller.GetMode() == MANUAL){
       Serial.println("****ESTOP****");
     }
+    last_ticks = ticks;
     ticks = 0;
   }
 }
@@ -91,8 +92,8 @@ void receive(int incoming){
   }
 }
 
-void writeVoltage(){
-  Wire.write(analogRead(VOLTAGE_PIN));
+void writeTicks(){
+  Wire.write((char *) &last_ticks, sizeof(int));
 }
 void setParam(int incoming, volatile int * dest){
   if(incoming != sizeof(int) +1){
@@ -104,7 +105,7 @@ void setParam(int incoming, volatile double * dest){
   if(incoming != sizeof(double)+1){
     return;
   }
-  byte buff[4];
+  byte buff[sizeof(double)];
   for(int i = 0; i < sizeof(double); ++i){
     buff[i] = Wire.read();
   }
